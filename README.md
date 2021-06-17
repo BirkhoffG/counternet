@@ -19,3 +19,8 @@ nbdev_update_lib
 ```
 nbdev_clean_nbs
 ```
+
+## Test all modules
+```
+nbdev_test_nbs
+```
