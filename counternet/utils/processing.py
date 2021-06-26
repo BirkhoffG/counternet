@@ -133,7 +133,7 @@ class PandasDataset(NumpyDataset):
         y = df[cols[-1]].to_numpy()
         super().__init__(X, y)
 
-# Comes from 02_counter_net.ipynb, cell
+# Comes from 02b_counter_net.ipynb, cell
 class CategoricalNormalizer(object):
     """implement post-processing step to enforce each elements
     in every category in the range of [0, 1] and output to 1.

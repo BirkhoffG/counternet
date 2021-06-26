@@ -5,7 +5,7 @@ __all__ = ['load_trained_model', 'CFNetTrainer']
 # Cell
 from .import_essentials import *
 from .utils.all import *
-from .counternet_training import *
+from .training_module import *
 
 # Cell
 def load_trained_model(module: BaseModule, checkpoint_path: str, gpus : int = 0) -> BaseModule:
