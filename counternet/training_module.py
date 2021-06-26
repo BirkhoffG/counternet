@@ -131,7 +131,6 @@ class PredictiveTrainingModule(BaseModule):
         return self.model_forward(x)
 
     def predict(self, x):
-        self.freeze()
         y_hat = self(x)
         return torch.round(y_hat)
 
@@ -181,7 +180,6 @@ class CFNetTrainingModule(BaseModule):
 
     def predict(self, x):
         """x has not been preprocessed"""
-        self.freeze()
         y_hat, _ = self.model_forward(x)
         return torch.round(y_hat)
 
