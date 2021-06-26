@@ -1,5 +1,5 @@
 {
-    "data_dir": "data/extra/s_breast_cancer.csv",
+    "data_dir": "assets/data/extra/s_breast_cancer.csv",
     "lr": 0.001,
     "batch_size": 128,
     "lambda_1": 1.0,

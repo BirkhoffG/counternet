@@ -1,5 +1,5 @@
 {
-    "data_dir": "data/s_home.csv",
+    "data_dir": "assets/data/s_home.csv",
     "lr": 0.005,
     "batch_size": 128,
     "lambda_1": 1.0,

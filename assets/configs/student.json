@@ -1,5 +1,5 @@
 {
-    "data_dir": "data/s_student.csv",
+    "data_dir": "assets/data/s_student.csv",
     "lr": 0.001,
     "batch_size": 128,
     "lambda_1": 1.0,

@@ -1,5 +1,5 @@
 {
-    "data_dir": "data/dummy_data.csv",
+    "data_dir": "assets/data/dummy_data.csv",
     "lr": 0.0003,
     "batch_size": 128,
     "lambda_1": 1.0,
