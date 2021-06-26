@@ -54,28 +54,29 @@ class StandardScaler(ABCScaler):
 # Cell
 class MinMaxScaler(ABCScaler):
     """rewrite `MinMaxScaler` object in sci-kit learn in pytorch to eliminate cpu-gpu communication time"""
-    min, max = None, None
+    min_, max_ = None, None
 
     @check_object_input_type
     def fit(self, X):
-        self.min, self.max = torch.min(X), torch.max(X)
-        assert self.min == self.max, f"min(X) == max(X) is not allowed."
+        self.min_, self.max_ = torch.min(X), torch.max(X)
+        assert self.min_ != self.max_, f"min(X) == max(X) is not allowed."
         return self
 
     @check_object_input_type
     def transform(self, X):
-        if (self.mean_ is None) or (self.std_ is None):
+        if (self.min_ is None) or (self.max_ is None):
             raise NotImplementedError(f'The scaler has not been fitted.')
-        return (X - self.min) / (self.max - self.min)
+        return (X - self.min_) / (self.max_ - self.min_)
 
     @check_object_input_type
     def fit_transform(self, X):
-        self.min, self.max = torch.min(X), torch.max(X)
-        return (X - self.min) / (self.max - self.min )
+        self.min_, self.max_ = torch.min(X), torch.max(X)
+        assert self.min_ != self.max_, f"min(X) == max(X) is not allowed."
+        return (X - self.min_) / (self.max_ - self.min_)
 
     @check_object_input_type
     def inverse_transform(self, X):
-        return X * (self.max - self.min) + self.min
+        return X * (self.max_ - self.min_) + self.min_
 
 # Cell
 # TODO need to check

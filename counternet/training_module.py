@@ -7,7 +7,6 @@ from .import_essentials import *
 from .utils.all import *
 from .evaluation import SensitivityMetric, ProximityMetric
 
-
 pl_logger = logging.getLogger('lightning')
 
 # Cell
@@ -65,6 +64,12 @@ class BaseModule(pl.LightningModule, ABCBaseModule):
         self.data = self.data.astype(
             {col: np.float for col in self.continous_cols})
 
+    def __check_cat_size(self, X_cat: torch.Tensor, categories: List[List[Any]]):
+        n = 0
+        for cat in categories:
+            n += len(cat)
+        return X_cat.size(-1) == n
+
     def training_epoch_end(self, outs):
         if self.current_epoch == 0:
             self.logger.log_hyperparams(self.hparams)
@@ -83,14 +88,16 @@ class BaseModule(pl.LightningModule, ABCBaseModule):
 
         # init categorical normalizer to enable categorical features to be one-hot-encoding format
         cat_arrays = self.ohe.categories_ if self.discret_cols else []
-        self.cat_normalizer = CategoricalNormalizer(cat_arrays, cat_idx=len(X_cont))
+        self.cat_normalizer = CategoricalNormalizer(cat_arrays, cat_idx=len(self.continous_cols))
+        assert self.__check_cat_size(X_cat, cat_arrays)
 
         # init sensitivity metric
         self.sensitivity = SensitivityMetric(
-            predict_fn=self.predict, scaler=self.scaler, cat_idx=len(X_cont), threshold=self.threshold)
+            predict_fn=self.predict, scaler=self.scaler, cat_idx=len(self.continous_cols), threshold=self.threshold)
 
-        pl_logger.info(f"x_cont: {X_cont.size()}, x_cat: {X_cat.size()}")
-        pl_logger.info("X shape: ", X.size())
+        print(f"x_cont: {X_cont.size()}, x_cat: {X_cat.size()}")
+        print(f"categories: {cat_arrays}")
+        print("X shape: ", X.size())
 
         assert X.size(-1) == self.enc_dims[0],\
             f'The input dimension X (shape: {X.shape[-1]})  != encoder_dims[0]: {self.enc_dims}'
@@ -169,13 +176,13 @@ class CFNetTrainingModule(BaseModule):
     def forward(self, x, hard: bool=False):
         """hard: categorical features in counterfactual is one-hot-encoding or not"""
         y, c = self.model_forward(x)
-        c = self.cat_normalize(c, hard=hard)
+        c = self.cat_normalizer.normalize(c, hard=hard)
         return y, c
 
     def predict(self, x):
         """x has not been preprocessed"""
         self.freeze()
-        y_hat, c = self.model_forward(x)
+        y_hat, _ = self.model_forward(x)
         return torch.round(y_hat)
 
     def generate_cf(self, x, clamp=False):
@@ -199,7 +206,7 @@ class CFNetTrainingModule(BaseModule):
         """
         # flip zero/one
         if y_prime == None:
-            y_prime = (y_hat < .5).clone().detach().float()
+            y_prime = flip_binary(y_hat)
 
         c_y, _ = self(c)
         # loss functions
@@ -256,15 +263,15 @@ class CFNetTrainingModule(BaseModule):
 
         # loss
         l_1, l_2, l_3 = self._loss_functions(x, c, y, y_hat, is_val=True)
-        loss = self.predict_step(l_1, l_3) + self.explainer_step(l_2, l_3)
+        loss = self.lambda_1 * l_1 + self.lambda_2 * l_2 + self.lambda_3 * l_3
 
         # logging val loss
         self._logging_loss(l_1, l_2, l_3, stage='val', on_step=False)
 
         # metrics
         metrics = {
-            'val/val_loss': loss, 'val/pred_accuracy': self.pred_acc(round(y_hat), y),
-            'val/cf_proximity': self.proximity(x, c), 'val/cf_accuracy': self.cf_acc(round(c_y), 1 - round(y_hat)),
-            'val/sensitivity': self.sensitivity(x, c, c_y),
+            'val/val_loss': loss, 'val/pred_accuracy': self.pred_acc(torch.round(y_hat), y.int()),
+            'val/cf_proximity': self.proximity(x, c), 'val/sensitivity': self.sensitivity(x, c, c_y),
+            'val/cf_accuracy': self.cf_acc(torch.round(c_y), flip_binary(y_hat).int()),
         }
         self.log_dict(metrics, on_step=False, on_epoch=True, sync_dist=True)
