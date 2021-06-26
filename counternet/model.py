@@ -34,7 +34,6 @@ class MultilayerPerception(nn.Module):
     def forward(self, x):
         return self.model(x)
 
-
 # Comes from 02b_counter_net.ipynb, cell
 class BaselinePredictiveModel(PredictiveTrainingModule):
     def __init__(self, config):

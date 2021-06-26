@@ -3,7 +3,7 @@
 __all__ = ["index", "modules", "custom_doc_links", "git_url"]
 
 index = {"load_trained_model": "00_pipeline.ipynb",
-         "CFNetTrainer": "00_pipeline.ipynb",
+         "ModelTrainer": "00_pipeline.ipynb",
          "check_input_type": "01a_functional.ipynb",
          "check_object_input_type": "01a_functional.ipynb",
          "dict2json": "01b_data.ipynb",

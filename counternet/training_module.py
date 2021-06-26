@@ -60,8 +60,10 @@ class BaseModule(pl.LightningModule, ABCBaseModule):
         self.example_input_array = torch.randn((1, self.enc_dims[0]))
 
     def __check_cols(self):
-        assert sorted(list(self.data.columns)) == sorted(self.continous_cols + self.discret_cols)
-        self.data = self.data.astype({col: np.float for col in self.continous_cols})
+        assert sorted(list(self.data.columns[:-1])) == sorted(self.continous_cols + self.discret_cols), \
+            f"data columns ({sorted(list(self.data.columns[:-1]))}) is not the same as continous_cols and discret_cols ({sorted(self.continous_cols + self.discret_cols)})"
+        self.data = self.data.astype(
+            {col: np.float for col in self.continous_cols})
 
     def training_epoch_end(self, outs):
         if self.current_epoch == 0:
@@ -94,10 +96,10 @@ class BaseModule(pl.LightningModule, ABCBaseModule):
             f'The input dimension X (shape: {X.shape[-1]})  != encoder_dims[0]: {self.enc_dims}'
 
         # prepare train & test
-        train, val, test = train_val_test_split(X, y.to_numpy())
-        self.train_dataset = NumpyDataset(*train)
-        self.val_dataset = NumpyDataset(*val)
-        self.test_dataset = NumpyDataset(*test)
+        train, val, test = train_val_test_split(X, y)
+        self.train_dataset = TensorDataset(*train)
+        self.val_dataset = TensorDataset(*val)
+        self.test_dataset = TensorDataset(*test)
 
     def train_dataloader(self):
         return DataLoader(self.train_dataset, batch_size=self.batch_size,
@@ -151,9 +153,9 @@ class PredictiveTrainingModule(BaseModule):
         y_hat = self(*x)
         # loss
         loss = F.binary_cross_entropy(y_hat, y)
-        self.accuracy(y_hat, y)
-        self.log('val/val_loss_1', loss, on_step=False, on_epoch=True, prog_bar=False, logger=True)
-        self.log('val/pred_accuracy', self.accuracy, on_step=False, on_epoch=True, prog_bar=False, logger=True, sync_dist=True)
+
+        self.log('val/val_loss', loss, on_step=False, on_epoch=True, prog_bar=False, logger=True)
+        self.log('val/pred_accuracy', self.val_acc(y_hat, y.int()), on_step=False, on_epoch=True, sync_dist=True)
 
 # Cell
 class CFNetTrainingModule(BaseModule):

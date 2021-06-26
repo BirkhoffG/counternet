@@ -202,7 +202,7 @@ def load_learning_analytic_data(path='assets/data/oulad'):
 def describe(configs: List[Dict[str, Dict[str, Any]]]):
     r = {"size": {}, "# of Cont": {}, "# of Cat": {}}
     for data_name, config in configs:
-        data = pd.read_csv(f"assets/{config['data_dir']}")
+        data = pd.read_csv(f"{config['data_dir']}")
         data_size = len(data)
         cat_len = len(config['discret_cols'])
         cont_len = len(config['continous_cols'])

@@ -15,8 +15,14 @@ def _check_type(X):
             X = torch.from_numpy(X)
         elif isinstance(X, list):
             X = torch.tensor(X)
+        elif isinstance(X, pd.DataFrame):
+            X = X.to_numpy()
+            X = torch.from_numpy(X)
+        elif isinstance(X, pd.Series):
+            X = X.values
+            X = torch.tensor(X)
         else:
-            raise ValueError(f'input X should be one of these types: [`list`, `np.ndarray`, `torch.Tensor`], but got {type(X)}')
+            raise ValueError(f'input X should be one of these types: [`list`, `pd.DataFrame`, `np.ndarray`, `torch.Tensor`], but got {type(X)}')
     return X.float()
 
 # Cell
@@ -65,16 +71,17 @@ def split_X_y(data: pd.DataFrame):
     y = data[data.columns[-1]]
     return X, y
 
+@check_input_type
 def train_val_test_split(X, y):
     assert len(X) == len(y)
     size = len(X)
     train_size = int(0.7 * size)    # 70% for training
     val_size = int(0.8 * size)      # 10% for validation
 
-    return tuple(
-        tuple(X[: train_size], y[: train_size]),
-        tuple(X[train_size:val_size], y[train_size:val_size]),
-        tuple(X[val_size:], y[val_size:])
+    return (
+        (X[: train_size], y[: train_size]),
+        (X[train_size:val_size], y[train_size:val_size]),
+        (X[val_size:], y[val_size:])
     )
 
 # Comes from 02b_counter_net.ipynb, cell

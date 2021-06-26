@@ -108,7 +108,7 @@ class OneHotEncoder(object):
 # Cell
 class NumpyDataset(TensorDataset):
     def __init__(self, *arrs):
-        super(NumpyDataset, self).__init__()
+        super().__init__()
         # init tensors
         # small patch: skip continous or discrete array without content
         self.tensors = [torch.tensor(arr).float()
