@@ -1,4 +1,5 @@
 {
+    "dataset_name": "breast_cancer",
     "data_dir": "assets/data/extra/s_breast_cancer.csv",
     "lr": 0.001,
     "batch_size": 128,

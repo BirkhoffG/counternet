@@ -1,4 +1,5 @@
 {
+    "dataset_name": "german",
     "data_dir": "assets/data/extra/s_german_credit.csv",
     "lr": 0.01,
     "batch_size": 128,

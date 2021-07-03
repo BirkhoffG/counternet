@@ -1,4 +1,5 @@
 {
+    "dataset_name": "student",
     "data_dir": "assets/data/s_student.csv",
     "lr": 0.001,
     "batch_size": 128,

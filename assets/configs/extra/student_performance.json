@@ -1,4 +1,5 @@
 {
+    "dataset_name": "student_performance",
     "data_dir": "assets/data/extra/s_student_performance.csv",
     "lr": 0.01,
     "batch_size": 128,

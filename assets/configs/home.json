@@ -1,4 +1,5 @@
 {
+    "dataset_name": "home",
     "data_dir": "assets/data/s_home.csv",
     "lr": 0.005,
     "batch_size": 128,
