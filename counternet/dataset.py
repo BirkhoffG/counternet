@@ -4,7 +4,7 @@ __all__ = ['dict2json', 'load_json', 'update_json_file', 'bn_func', 'x1_to_x3', 
            'load_adult_income_dataset', 'load_learning_analytic_data', 'describe']
 
 # Cell
-from ..import_essentials import *
+from .import_essentials import *
 
 # Cell
 def dict2json(dictionary: Dict[str, Any], file_name: str):

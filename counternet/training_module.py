@@ -6,8 +6,9 @@ __all__ = ['pl_logger', 'ABCBaseModule', 'BaseModule', 'PredictiveTrainingModule
 from .import_essentials import *
 from .utils.all import *
 from .evaluation import SensitivityMetric, ProximityMetric
+from .cf_explainer import GlobalExplainerBase
 
-pl_logger = logging.getLogger('lightning')
+pl_logger = logging.getLogger('lightning').setLevel(logging.ERROR)
 
 # Cell
 class ABCBaseModule(ABC):
@@ -164,7 +165,7 @@ class PredictiveTrainingModule(BaseModule):
         self.log('val/pred_accuracy', self.val_acc(y_hat, y.int()), on_step=False, on_epoch=True, sync_dist=True)
 
 # Cell
-class CFNetTrainingModule(BaseModule):
+class CFNetTrainingModule(BaseModule, GlobalExplainerBase):
     def __init__(self, configs: Dict[str, Any]):
         super().__init__(configs)
         # define metrics

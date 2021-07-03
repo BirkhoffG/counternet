@@ -4,9 +4,9 @@ __all__ = ['ABCScaler', 'StandardScaler', 'MinMaxScaler', 'OneHotEncoder', 'Nump
            'CategoricalNormalizer']
 
 # Cell
-from ..import_essentials import *
-from .functional import *
-from .dataset import load_adult_income_dataset
+from .import_essentials import *
+from .utils.functional import *
+from .utils.dataset import load_adult_income_dataset
 
 # Cell
 class ABCScaler(ABC):

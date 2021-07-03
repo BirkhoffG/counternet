@@ -20,6 +20,7 @@ from sklearn.model_selection import train_test_split, GridSearchCV, cross_valida
 # misc.
 from pprint import pprint
 import logging
+from tabulate import tabulate
 from joblib import Parallel, delayed
 from tqdm import tqdm
 from pathlib import Path
@@ -33,6 +34,7 @@ from pytorch_lightning.callbacks import ModelCheckpoint, Callback
 from pytorch_lightning.loggers.base import LightningLoggerBase
 from pytorch_lightning import loggers as pl_loggers
 from torchmetrics import Metric, Accuracy
+from torchmetrics.functional.classification import accuracy
 
 from pytorch_lightning.utilities.seed import seed_everything
 

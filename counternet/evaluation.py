@@ -4,8 +4,7 @@ __all__ = ['SensitivityMetric', 'proximity', 'ProximityMetric']
 
 # Cell
 from .import_essentials import *
-from .utils.functional import *
-from .utils.processing import *
+from .utils import *
 
 # Comes from 02b_counter_net.ipynb, cell
 class SensitivityMetric(Metric):
