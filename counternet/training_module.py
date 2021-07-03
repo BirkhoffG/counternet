@@ -8,7 +8,6 @@ from .utils import *
 from .evaluation import SensitivityMetric, ProximityMetric
 from .cf_explainer import GlobalExplainerBase
 
-pl_logger = logging.getLogger('lightning').setLevel(logging.ERROR)
 
 # Cell
 class ABCBaseModule(ABC):
@@ -69,7 +68,7 @@ class BaseModule(pl.LightningModule, ABCBaseModule):
         n = 0
         for cat in categories:
             n += len(cat)
-        return X_cat.size(-1) == n
+        assert X_cat.size(-1) == n
 
     def training_epoch_end(self, outs):
         if self.current_epoch == 0:
@@ -83,14 +82,14 @@ class BaseModule(pl.LightningModule, ABCBaseModule):
         # preprocessing
         self.scaler = MinMaxScaler()
         self.ohe = OneHotEncoder()
-        X_cont = self.scaler.fit_transform(X[self.continous_cols]) if self.continous_cols else np.array([[] for _ in range(len(X))])
-        X_cat = self.ohe.fit_transform(X[self.discret_cols]) if self.discret_cols else np.array([[] for _ in range(len(X))])
+        X_cont = self.scaler.fit_transform(X[self.continous_cols]) if self.continous_cols else torch.tensor([[] for _ in range(len(X))])
+        X_cat = self.ohe.fit_transform(X[self.discret_cols]) if self.discret_cols else torch.tensor([[] for _ in range(len(X))])
         X = torch.cat((X_cont, X_cat), dim=1)
 
         # init categorical normalizer to enable categorical features to be one-hot-encoding format
         cat_arrays = self.ohe.categories_ if self.discret_cols else []
         self.cat_normalizer = CategoricalNormalizer(cat_arrays, cat_idx=len(self.continous_cols))
-        assert self.__check_cat_size(X_cat, cat_arrays)
+        self.__check_cat_size(X_cat, cat_arrays)
 
         # init sensitivity metric
         self.sensitivity = SensitivityMetric(

@@ -11,6 +11,10 @@ from .model import BaselinePredictiveModel, CounterNetModel
 from .cf_explainer import ExplainerBase, LocalExplainerBase, GlobalExplainerBase, VanillaCF
 from .evaluation import SensitivityMetric, proximity
 
+logging.getLogger('pytorch_lightning').setLevel(logging.ERROR)
+pl_logger = logging.getLogger("pytorch_lightning.core")
+
+
 # Cell
 def load_trained_model(module: BaseModule, checkpoint_path: str, gpus : int = 0) -> BaseModule:
     # assuming checkpoint_path = f"{dict_path}/epoch={n_epoch}-step={step}.ckpt"
@@ -35,7 +39,7 @@ class ModelTrainer(object):
                  callbacks: Optional[List[Callback]] = None,
                  description: Optional[str] = None,
                  debug: Optional[bool] = False,
-                 logger: Optional[LightningLoggerBase] = None,
+                 logger: Optional[Union[LightningLoggerBase, bool]] = None,
                  logger_name: str = "debug"):
 
         if logger is None:
@@ -103,7 +107,7 @@ class CFGeneratorBase(ABC):
         self.dataset = pred_model.test_dataset
         self.sensitivity = pred_model.sensitivity
 
-    def generate(self, dataset: Optional[TensorDataset]=None):
+    def generate(self, dataset: Optional[TensorDataset]=None, test_size: Optional[int] = None, debug: bool = False):
         raise NotImplementedError
 
 # Cell
@@ -112,7 +116,6 @@ class LocalCFGenerator(CFGeneratorBase):
             pred_model: BaselinePredictiveModel, configs: Dict[str, Any] = {}):
         super().__init__(cf_algo, pred_model, configs)
         # define cf_algo
-        print(cf_algo)
         if not issubclass(type(cf_algo), LocalExplainerBase):
             raise ValueError(f"cf_algo should be an instance of `{LocalExplainerBase}`, but got `{type(cf_algo)}`. ")
         CFExplainer = type(cf_algo)
@@ -132,7 +135,7 @@ class LocalCFGenerator(CFGeneratorBase):
         start_time = time.time()
         for ix, (x, y) in enumerate(tqdm(dataset)):
             if ix < size:
-                x, cf = self.__gen_step(x)
+                x, cf = self.gen_step(x)
                 result.append((x, cf))
         total_time = time.time() - start_time
         avg_time = total_time / size
@@ -147,10 +150,13 @@ class LocalCFGenerator(CFGeneratorBase):
             cf_algo[ix, :] = cf
         return X, cf_algo
 
-    def generate(self, dataset: Optional[TensorDataset]=None, debug: bool = False):        
+    def generate(self, dataset: Optional[TensorDataset] = None, test_size: Optional[int] = None, debug: bool = False):
         if dataset is None:
             dataset = self.pred_model.test_dataset
-        size = len(dataset) if not debug else 3
+        if test_size is None:
+            size = len(dataset) if not debug else 3
+        else:
+            size = test_size
 
         result = []
 
@@ -198,11 +204,14 @@ class GlobalCFGenerator(CFGeneratorBase):
             pred_model = cf_algo
         super().__init__(cf_algo, pred_model, configs)
 
-    def generate(self, dataset: Optional[TensorDataset]=None):
+    def generate(self, dataset: Optional[TensorDataset]=None, test_size: Optional[int] = None, debug: bool = False):
         if dataset is None:
             dataset = self.pred_model.test_dataset
+        if test_size is None:
+            size = len(dataset) if not debug else 3
+        else:
+            size = test_size
         x, y = dataset[:]
-        size = 1000
 
         print(f"generating {len(dataset)} cfs...")
         cf = self.cf_algo.generate_cf(x)
@@ -219,8 +228,6 @@ class GlobalCFGenerator(CFGeneratorBase):
         cf_y = flip_binary(y_hat)
         cf_y_hat = self.pred_model.predict(cf)
         sensitivity = self.pred_model.sensitivity
-        for t in [x, cf, y, y_hat, cf_y, cf_y_hat]:
-            print(t.size())
 
         self.results.update({'x': x, 'cf': cf, 'y': y, 'y_hat': y_hat, 'cf_y': cf_y, 'cf_y_hat': cf_y_hat})
         self.results.update({'sensitivity': sensitivity(x, cf, cf_y).item(), 'cat_idx': sensitivity.cat_idx})
@@ -250,8 +257,6 @@ class Evaluator(object):
 
         x, cf, y, y_hat, cf_y, cf_y_hat = results['x'], results['cf'], results['y'], \
             results['y_hat'], results['cf_y'], results['cf_y_hat']
-        for t in [x, cf, y, y_hat, cf_y, cf_y_hat]:
-            print(t.size())
         cat_idx, cf_name = results['cat_idx'], results['cf_algo']
 
         r['cont_proximity'][cf_name] = proximity(x[:, :cat_idx], cf[:, :cat_idx]).item()
@@ -263,7 +268,7 @@ class Evaluator(object):
         r['pred_accuracy'][cf_name] = accuracy(y.int(), y_hat.int()).item()
 
         final_result_df = pd.DataFrame.from_dict(r)
-        print(tabulate(final_result_df, headers = 'keys', tablefmt = 'psql'))
+        print(tabulate(final_result_df.astype("float16"), headers = 'keys', tablefmt = 'pretty'))
         if self.is_logging:
             final_result_df.to_csv(csv_path)
             torch.save(results, dir_path / f"{cf_name}_results.pt")
@@ -273,7 +278,7 @@ class Evaluator(object):
 # Cell
 class Experiment(object):
     def __init__(self, explainers: List[ExplainerBase],
-            m_configs: List[Dict[str, Any]], t_configs: Optional[Dict[str, Any]] = None):
+            m_configs: List[Dict[str, Any]], t_configs: Optional[Dict[str, Any]] = None, debug: bool = False):
         self.explainers = explainers
         self.m_configs = m_configs
         self.use_pred_model = False # need a `BaselinePredictiveModel` or not
@@ -283,6 +288,7 @@ class Experiment(object):
         else:
             self.t_configs = t_configs
         self.__check_explainers()
+        self.debug = debug
 
         self.evaluator = Evaluator(configs={'is_logging': True})
 
@@ -293,11 +299,12 @@ class Experiment(object):
         for explainer in self.explainers: # explainer is already passed as a type
             if self.__is_type(explainer):
                 explainer_type = deepcopy(explainer)
+                explainer = explainer_type(self.m_configs[0])
             else:
                 explainer_type = type(explainer)
             if not issubclass(explainer_type, ExplainerBase):
                 raise ValueError(f"The explainer should be a subclass of `{ExplainerBase}`, but got `{explainer_type}`")
-            if not isinstance(explainer, CFNetTrainingModule):
+            if not (isinstance(explainer, CounterNetModel) or (issubclass(explainer_type, CFNetTrainingModule))):
                 self.use_pred_model = True
 
     def __check_seeds(self, seeds: Optional[List[int]]):
@@ -323,31 +330,37 @@ class Experiment(object):
                 model = CFExplainer(m_config)
             else: # need a predive model otherwise
                 model = CFExplainer(m_config, pred_model)
-            cfnet_trainer = ModelTrainer(model, self.t_configs)
+            logger_name = f"{CFExplainer.__name__.lower()}/{m_config['dataset_name']}"
+            cfnet_trainer = ModelTrainer(model, self.t_configs, logger_name=logger_name)
             cfnet_trainer.fit()
             cfnet_trainer.save_best_model(dir_path)
             cf_generator = GlobalCFGenerator(model)
         else:
             print(f"Generating local explanation for {CFExplainer}")
             cf_generator = LocalCFGenerator(CFExplainer(pred_model.predict), pred_model)
-        results = cf_generator.generate()
+        results = cf_generator.generate(debug=self.debug)
         self.evaluator.eval(results, dir_path)
 
     def experiment_step(self, m_config, seed: List[int]):
+        # train a baseline predictive model
         if self.use_pred_model:
-            pred_model = BaselinePredictiveModel(m_config)
+            print("training predictive model...")
+            pred_model_trainer = ModelTrainer(
+                BaselinePredictiveModel(m_config), self.t_configs, logger_name="pred_model")
+            pred_model = pred_model_trainer.fit()
+        else:
+            pred_model = None
+
         dataset_name = m_config['dataset_name']
         # logging dir
         dir_path = self.__make_dir(dataset_name, seed)
-        # train a baseline predictive model
-        pred_model_trainer = ModelTrainer(pred_model, self.t_configs)
-        pred_model = pred_model_trainer.fit()
+        
         for explainer in self.explainers:
             self.explainer_step(explainer, pred_model, m_config, dir_path)
 
     def run(self, seeds: Optional[List[int]] = None):
         seeds = self.__check_seeds(seeds)
         for seed in seeds:
-            seed_everything(seed)
+            seed_everything(seed, workers=True)
             for m_config in self.m_configs:
                 self.experiment_step(m_config, seed)

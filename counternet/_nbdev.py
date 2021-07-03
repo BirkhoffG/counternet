@@ -2,7 +2,8 @@
 
 __all__ = ["index", "modules", "custom_doc_links", "git_url"]
 
-index = {"load_trained_model": "00_pipeline.ipynb",
+index = {"logger": "00_pipeline.ipynb",
+         "load_trained_model": "00_pipeline.ipynb",
          "ModelTrainer": "00_pipeline.ipynb",
          "CFGeneratorBase": "00_pipeline.ipynb",
          "LocalCFGenerator": "00_pipeline.ipynb",
@@ -33,7 +34,6 @@ index = {"load_trained_model": "00_pipeline.ipynb",
          "LocalExplainerBase": "02_cf_explainer.ipynb",
          "GlobalExplainerBase": "02_cf_explainer.ipynb",
          "VanillaCF": "02_cf_explainer.ipynb",
-         "pl_logger": "02b_counter_net.ipynb",
          "CategoricalNormalizer": "02b_counter_net.ipynb",
          "SensitivityMetric": "02b_counter_net.ipynb",
          "proximity": "02b_counter_net.ipynb",
