@@ -25,7 +25,7 @@ from joblib import Parallel, delayed
 from tqdm import tqdm
 from pathlib import Path
 from fastcore.utils import in_jupyter
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, ABCMeta
 from copy import copy, deepcopy
 
 # pytorch-lightening

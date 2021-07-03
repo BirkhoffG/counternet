@@ -4,7 +4,7 @@ __all__ = ['pl_logger', 'ABCBaseModule', 'BaseModule', 'PredictiveTrainingModule
 
 # Cell
 from .import_essentials import *
-from .utils.all import *
+from .utils import *
 from .evaluation import SensitivityMetric, ProximityMetric
 from .cf_explainer import GlobalExplainerBase
 
@@ -96,9 +96,7 @@ class BaseModule(pl.LightningModule, ABCBaseModule):
         self.sensitivity = SensitivityMetric(
             predict_fn=self.predict, scaler=self.scaler, cat_idx=len(self.continous_cols), threshold=self.threshold)
 
-        print(f"x_cont: {X_cont.size()}, x_cat: {X_cat.size()}")
-        print(f"categories: {cat_arrays}")
-        print("X shape: ", X.size())
+        print(f"x_cont: {X_cont.size()}, x_cat: {X_cat.size()}, X shape: {X.size()}")
 
         assert X.size(-1) == self.enc_dims[0],\
             f'The input dimension X (shape: {X.shape[-1]})  != encoder_dims[0]: {self.enc_dims}'

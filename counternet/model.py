@@ -4,7 +4,7 @@ __all__ = ['LinearBlock', 'MultilayerPerception', 'BaselinePredictiveModel', 'Co
 
 # Cell
 from .import_essentials import *
-from .utils.all import *
+from .utils import *
 from .training_module import BaseModule, PredictiveTrainingModule, CFNetTrainingModule
 
 # Comes from 02b_counter_net.ipynb, cell

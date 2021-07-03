@@ -5,8 +5,8 @@ __all__ = ['ABCScaler', 'StandardScaler', 'MinMaxScaler', 'OneHotEncoder', 'Nump
 
 # Cell
 from .import_essentials import *
-from .utils.functional import *
-from .utils.dataset import load_adult_income_dataset
+from .functional_utils import *
+from .dataset import load_adult_income_dataset
 
 # Cell
 class ABCScaler(ABC):
