@@ -2,7 +2,7 @@
 
 __all__ = ["index", "modules", "custom_doc_links", "git_url"]
 
-index = {"logger": "00_pipeline.ipynb",
+index = {"pl_logger": "00_pipeline.ipynb",
          "load_trained_model": "00_pipeline.ipynb",
          "ModelTrainer": "00_pipeline.ipynb",
          "CFGeneratorBase": "00_pipeline.ipynb",
