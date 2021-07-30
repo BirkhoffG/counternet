@@ -1,8 +1,8 @@
 # CounterNet: End-to-End Training of Counterfactual Aware Predictions
 
-This is the official repository of the paper [CounterNet: End-to-End Training of Counterfactual Aware Predictions](). The purpose of the repository is only for research and reproduction of the paper's results. The audience should not expect to use the code directly in the deployed environemnt. 
+This is the official repository of the paper [CounterNet: End-to-End Training of Counterfactual Aware Predictions](https://birkhoffg.github.io/files/icml21_workshop/counternet_paper.pdf). The purpose of the repository is only for research and reproduction of the paper's results. The audience should not expect to use the code directly in the deployed environemnt. 
 
-The repository is built based on [nbdev](https://nbdev.fast.ai/). I highly recommend you to check out [nbdev](https://nbdev.fast.ai/) if you enjoy writing code with Jupyter Notebook as I do. Further, it primarily leverages `Pytorch` and `Pytorch Lightning` for implementations of deep learning models. To install all the dependencies, you should run:
+The repository is built based on [nbdev](https://nbdev.fast.ai/). I highly recommend you to check out [nbdev](https://nbdev.fast.ai/) if you enjoy writing code with Jupyter Notebook as I do. Further, this project primarily leverages `Pytorch` and `Pytorch Lightning` for implementations of deep learning models. To install all the dependencies, you should run:
 
 ```
 pip install -e .
