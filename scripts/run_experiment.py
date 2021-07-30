@@ -1,4 +1,4 @@
-from counternet.cf_explainer import VanillaCF
+from counternet.cf_explainer import VanillaCF, VAE_CF, DiverseCF
 from counternet.pipeline import Experiment
 from counternet.model import CounterNetModel
 from counternet.utils import load_configs

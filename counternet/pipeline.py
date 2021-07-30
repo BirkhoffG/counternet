@@ -8,7 +8,8 @@ from .import_essentials import *
 from .utils import *
 from .training_module import BaseModule, CFNetTrainingModule
 from .model import BaselinePredictiveModel, CounterNetModel
-from .cf_explainer import ExplainerBase, LocalExplainerBase, GlobalExplainerBase, VanillaCF
+from .base_interface import LocalExplainerBase, GlobalExplainerBase, ExplainerBase
+from .cf_explainer import VanillaCF
 from .evaluation import SensitivityMetric, proximity
 
 logging.getLogger('pytorch_lightning').setLevel(logging.ERROR)
@@ -44,7 +45,7 @@ class ModelTrainer(object):
         if logger is None:
             logger = pl_loggers.TestTubeLogger(
                 Path('log/'), name=logger_name,
-                description=description, debug=debug, log_graph=True
+                description=description, debug=debug, log_graph=False
             )
 
         # model checkpoint
@@ -159,7 +160,7 @@ class LocalCFGenerator(CFGeneratorBase):
 
         result = []
 
-        if self.is_parallel:
+        if self.is_parallel and not debug:
             print(f"generating {size} cfs in parallel...")
             result = Parallel(n_jobs=-1, max_nbytes=None, verbose=False)(
                 delayed(self.gen_step) (x=x)
@@ -298,7 +299,7 @@ class Experiment(object):
         for explainer in self.explainers: # explainer is already passed as a type
             if self.__is_type(explainer):
                 explainer_type = deepcopy(explainer)
-                explainer = explainer_type(self.m_configs[0])
+                # explainer = explainer_type(self.m_configs[0])
             else:
                 explainer_type = type(explainer)
             if not issubclass(explainer_type, ExplainerBase):
@@ -329,6 +330,7 @@ class Experiment(object):
                 model = CFExplainer(m_config)
             else: # need a predive model otherwise
                 model = CFExplainer(m_config, pred_model)
+            # train CounterNet/GlobalCFExplainer
             logger_name = f"{CFExplainer.__name__.lower()}/{m_config['dataset_name']}"
             cfnet_trainer = ModelTrainer(model, self.t_configs, logger_name=logger_name)
             cfnet_trainer.fit()

@@ -1,11 +1,11 @@
 {
     "dataset_name": "adult",
     "data_dir": "assets/data/s_adult.csv",
-    "lr": 0.003,
+    "lr": 0.001,
     "batch_size": 128,
     "lambda_1": 1.0,
     "lambda_2": 0.01,
-    "lambda_3": 0.2,
+    "lambda_3": 0.4,
     "threshold": 1.0,
     "continous_cols": [
         "age",

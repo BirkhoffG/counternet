@@ -33,3 +33,9 @@ nbdev_clean_nbs
 ```
 nbdev_test_nbs
 ```
+
+## Start tensorboard
+
+```
+tensorboard --logdir log --bind_all
+```
