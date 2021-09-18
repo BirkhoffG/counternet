@@ -60,19 +60,24 @@ class CounterNetModel(CFNetTrainingModule):
         assert self.enc_dims[-1] == self.exp_dims[0]
 
         self.encoder_model = MultilayerPerception(self.enc_dims)
-        self.predictor = nn.Sequential(
-            MultilayerPerception(self.dec_dims),
-            nn.Linear(self.dec_dims[-1], 1)
-        )
+        # predictor
+        self.predictor = MultilayerPerception(self.dec_dims)
+        self.pred_linear = nn.Linear(self.dec_dims[-1], 1)
+        # explainer
+        exp_dims = [x for x in self.exp_dims]
+        exp_dims[0] = self.exp_dims[0] + self.dec_dims[-1]
+
         self.explainer = nn.Sequential(
-            MultilayerPerception(self.exp_dims),
+            MultilayerPerception(exp_dims),
             nn.Linear(self.exp_dims[-1], self.enc_dims[0])
         )
 
     def model_forward(self, x):
         x = self.encoder_model(x)
         # predicted y_hat
-        y_hat = torch.sigmoid(self.predictor(x))
+        pred = self.predictor(x)
+        y_hat = torch.sigmoid(self.pred_linear(pred))
         # counterfactual example
+        x = torch.cat((x, pred), -1)
         c = self.explainer(x)
         return torch.squeeze(y_hat, -1), c

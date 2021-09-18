@@ -5,7 +5,7 @@ __all__ = ['BaseModule', 'PredictiveTrainingModule', 'CFNetTrainingModule']
 # Cell
 from .import_essentials import *
 from .utils import *
-from .evaluation import SensitivityMetric, ProximityMetric
+from .evaluation import SensitivityMetric, proximity# ProximityMetric
 from .base_interface import ABCBaseModule, GlobalExplainerBase
 
 # Cell
@@ -153,7 +153,7 @@ class CFNetTrainingModule(BaseModule, GlobalExplainerBase):
         # define metrics
         self.pred_acc = Accuracy()
         self.cf_acc = Accuracy()
-        self.proximity = ProximityMetric()
+        # self.proximity = ProximityMetric()
 
     def forward(self, x, hard: bool=False):
         """hard: categorical features in counterfactual is one-hot-encoding or not"""
@@ -251,8 +251,8 @@ class CFNetTrainingModule(BaseModule, GlobalExplainerBase):
 
         # metrics
         metrics = {
-            'val/val_loss': loss, 'val/pred_accuracy': self.pred_acc(torch.round(y_hat), y.int()),
-            'val/cf_proximity': self.proximity(x, c), 'val/sensitivity': self.sensitivity(x, c, c_y),
-            'val/cf_accuracy': self.cf_acc(torch.round(c_y), flip_binary(y_hat).int()),
+            'val/val_loss': loss, 'val/pred_accuracy': accuracy(y_hat, y.int()),
+            'val/cf_proximity': proximity(x, c), 'val/sensitivity': self.sensitivity(x, c, c_y),
+            'val/cf_accuracy': accuracy(torch.round(c_y), flip_binary(y_hat).int()),
         }
         self.log_dict(metrics, on_step=False, on_epoch=True, sync_dist=True)
